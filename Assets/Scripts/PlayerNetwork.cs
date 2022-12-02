@@ -19,9 +19,15 @@ public class PlayerNetwork : NetworkBehaviour
     // HAS TO BE PUBLIC
     // TODO: what is STRUCT and virtual ?????????
     // error in lower version, need to implement INetworkSerializable and implement the method // https://www.youtube.com/watch?v=3yuBOB3VrCk
-    public struct MyCustomData {
+    public struct MyCustomData: INetworkSerializable {
         public int _int;
         public bool _bool;
+
+        void INetworkSerializable.NetworkSerialize<T>(BufferSerializer<T> serializer)
+        {
+            serializer.SerializeValue(ref _int);
+            serializer.SerializeValue(ref _bool);
+        }
         // cant use strings, but CAN use FixedString type with specific byte count, 1 char = 1 byte
     }
 
