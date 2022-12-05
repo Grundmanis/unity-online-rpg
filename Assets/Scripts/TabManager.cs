@@ -4,15 +4,16 @@ using UnityEngine;
 
 public class TabManager : MonoBehaviour
 {
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
+    [SerializeField] private GameObject[] tabs;
 
-    // Update is called once per frame
-    void Update()
-    {
+    public void onTabSwitch(GameObject tab) {
         
+        tab.SetActive(true);
+
+        for(int i = 0; i < tabs.Length; i++) {
+            if (tabs[i] != tab) {
+                tabs[i].SetActive(false);
+            }
+        }
     }
 }

@@ -212,7 +212,7 @@ public class MainLobby : MonoBehaviour
         }
     }
 
-    private void KickPlayer() {
+    private async void KickPlayer() {
           try {
             await LobbyService.Instance.RemovePlayerAsync(joinedLobby.Id, AuthenticationService.Instance.PlayerId);
        } catch(LobbyServiceException e) {
