@@ -6,6 +6,7 @@ using Unity.Services.Lobbies;
 using Unity.Services.Lobbies.Models;
 using UnityEngine;
 using IngameDebugConsole;
+using TMPro;
 
 public class MainLobby : MonoBehaviour
 {
@@ -19,6 +20,15 @@ public class MainLobby : MonoBehaviour
 
     private string playerName;
 
+    private string lobbyName;
+
+    private bool IsPrivateValue = false;
+
+    private int maxPlayers = 5;
+
+    [SerializeField]
+    private GameObject playerInputField;
+
     private async void Start()
     {
         await UnityServices.InitializeAsync();
@@ -31,6 +41,8 @@ public class MainLobby : MonoBehaviour
         await AuthenticationService.Instance.SignInAnonymouslyAsync();
         playerName = "GameFeel " + UnityEngine.Random.Range(10, 99);
         Debug.Log("Player name: " + playerName);
+
+        playerInputField.GetComponent<TMP_InputField>().text = playerName;
         
 		DebugLogConsole.AddCommand( "CreateLobby", "Creates lobby ", CreateLobby);
 		DebugLogConsole.AddCommand( "ListLobbies", "List lobby ", ListLobbies);
@@ -74,12 +86,10 @@ public class MainLobby : MonoBehaviour
         }
     }
 
-    private async void CreateLobby() {
+    public async void CreateLobby() {
         try {
-            string lobbyName = "Test lobby";
-            int maxPlayers = 4;
             CreateLobbyOptions options = new CreateLobbyOptions() {
-                IsPrivate = false,
+                IsPrivate = IsPrivateValue,
                 Player = GetPlayer(),
                 Data = new Dictionary<string, DataObject> {
                     { "GameMode", new DataObject(DataObject.VisibilityOptions.Public, "PrivateRaid")}
@@ -218,5 +228,31 @@ public class MainLobby : MonoBehaviour
        } catch(LobbyServiceException e) {
             Debug.Log(e);
         }
+    }
+
+    public void setPlayerName(string newPlayerName) {
+        Debug.Log("new player name: " + newPlayerName);
+        playerName = newPlayerName;
+    }
+
+    public void setLobbbyName(string newLobbyName) {
+        Debug.Log("new lobby name: " + newLobbyName);
+        lobbyName = newLobbyName;
+    }
+
+    public void setMaxPlayers(string newMaxPlayers) {
+        
+         if (int.TryParse(newMaxPlayers, out int result)) {
+            Debug.Log("new max players: " + result);
+            maxPlayers = result;
+        } else {
+            Debug.Log("Could not set max players, setting to 5");
+            maxPlayers = 5;
+        }
+    }
+
+    public void toggleIsPrivate() {
+        IsPrivateValue = !IsPrivateValue;
+        Debug.Log("is private now " + IsPrivateValue);
     }
 }
