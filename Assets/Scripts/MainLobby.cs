@@ -7,9 +7,12 @@ using Unity.Services.Lobbies.Models;
 using UnityEngine;
 using IngameDebugConsole;
 using TMPro;
+using System;
 
 public class MainLobby : MonoBehaviour
 {
+    public static MainLobby Instance { get; private set; }
+
     private Lobby hostLobby; 
     
     private Lobby joinedLobby; 
@@ -20,17 +23,25 @@ public class MainLobby : MonoBehaviour
 
     private string playerName;
 
-    private string lobbyName;
+    // private string lobbyName;
 
-    private bool IsPrivateValue = false;
+    // private bool IsPrivateValue = false;
 
-    private int maxPlayers = 5;
+    // private int maxPlayers = 5;
 
     [SerializeField]
     private GameObject playerInputField;
 
-    private async void Start()
+    public event EventHandler<LobbyEventArgs> OnJoinedLobby;
+
+    public class LobbyEventArgs : EventArgs {
+        public Lobby lobby;
+    }
+
+    private async void Awake()
     {
+        Instance = this;
+
         await UnityServices.InitializeAsync();
 
         AuthenticationService.Instance.SignedIn += () => {
@@ -44,7 +55,6 @@ public class MainLobby : MonoBehaviour
 
         playerInputField.GetComponent<TMP_InputField>().text = playerName;
         
-		DebugLogConsole.AddCommand( "CreateLobby", "Creates lobby ", CreateLobby);
 		DebugLogConsole.AddCommand( "ListLobbies", "List lobby ", ListLobbies);
 		DebugLogConsole.AddCommand( "QuickJoinLobby", "Quick Join Lobby ", QuickJoinLobby);
 		DebugLogConsole.AddCommand( "PrintPlayers", "PrintPlayers ", PrintPlayers);
@@ -86,24 +96,32 @@ public class MainLobby : MonoBehaviour
         }
     }
 
-    public async void CreateLobby() {
+    public async void CreateLobby(string lobbyName, int maxPlayers, bool isPrivate) {
+
         try {
+
+            Player player = GetPlayer();
+
             CreateLobbyOptions options = new CreateLobbyOptions() {
-                IsPrivate = IsPrivateValue,
-                Player = GetPlayer(),
+                Player = player,
+                IsPrivate = isPrivate,
                 Data = new Dictionary<string, DataObject> {
-                    { "GameMode", new DataObject(DataObject.VisibilityOptions.Public, "PrivateRaid")}
+                    { "GameMode", new DataObject(DataObject.VisibilityOptions.Public, "Raid")}
                     // { "GameMode", new DataObject(DataObject.VisibilityOptions.Public, "PrivateRaid", DataObject.IndexOptions.S1)}
                 }
             };
             Lobby lobby = await LobbyService.Instance.CreateLobbyAsync(lobbyName, maxPlayers, options);
 
             hostLobby = lobby;
+
             joinedLobby = hostLobby;
 
             Debug.Log("Lobby created! Name: " + lobbyName + "; Lobby id: " + lobby.Id + "; Lobby code: " + lobby.LobbyCode + " Max Players: " + maxPlayers + "; is private: " + options.IsPrivate);
             
             PrintPlayers(hostLobby);
+
+            OnJoinedLobby?.Invoke(Instance, new LobbyEventArgs { lobby = lobby });
+
         } catch(LobbyServiceException e) {
             Debug.Log(e);
         }
@@ -234,25 +252,8 @@ public class MainLobby : MonoBehaviour
         Debug.Log("new player name: " + newPlayerName);
         playerName = newPlayerName;
     }
-
-    public void setLobbbyName(string newLobbyName) {
-        Debug.Log("new lobby name: " + newLobbyName);
-        lobbyName = newLobbyName;
-    }
-
-    public void setMaxPlayers(string newMaxPlayers) {
-        
-         if (int.TryParse(newMaxPlayers, out int result)) {
-            Debug.Log("new max players: " + result);
-            maxPlayers = result;
-        } else {
-            Debug.Log("Could not set max players, setting to 5");
-            maxPlayers = 5;
-        }
-    }
-
-    public void toggleIsPrivate() {
-        IsPrivateValue = !IsPrivateValue;
-        Debug.Log("is private now " + IsPrivateValue);
+    
+    public Lobby GetJoinedLobby() {
+        return joinedLobby;
     }
 }
