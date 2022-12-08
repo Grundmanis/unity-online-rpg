@@ -17,7 +17,6 @@ public class LobbyCreateUI : MonoBehaviour
     [SerializeField] private Button createLobbyButton;
 
 
-
     private string lobbyName;
 
     private int maxPlayers = 5;

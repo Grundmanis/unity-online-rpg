@@ -3,12 +3,15 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using Unity.Services.Lobbies.Models;
+using UnityEngine.UI;
 
 public class LobbyUI : MonoBehaviour
 {
-    [SerializeField] private GameObject tableObject;
+    [SerializeField] private Transform tableObject;
 
-    [SerializeField] private GameObject playerRowObject;
+    [SerializeField] private Transform playerRowObject;
+
+    [SerializeField] private Transform rowHeader;
 
     [SerializeField] private TextMeshProUGUI lobbyNameText;
 
@@ -16,15 +19,20 @@ public class LobbyUI : MonoBehaviour
 
     [SerializeField] private TextMeshProUGUI playersText;
 
+    [SerializeField] private Button leaveButton;
+
+    void Awake() {
+        leaveButton.onClick.AddListener(() => MainLobby.Instance.LeaveLobby());
+    }
+
     void Start()
     {
-        
         MainLobby.Instance.OnJoinedLobby += UpdateLobby_Event;
+        MainLobby.Instance.OnJoinedLobbyUpdate += UpdateLobby_Event;
 
         //  GameObject.Instantiate(playerRowObject, Vector3.zero, Quaternion.identity, tableObject.transform);
         //  GameObject.Instantiate(playerRowObject, Vector3.zero, Quaternion.identity, tableObject.transform);
     }
-
     
     private void UpdateLobby_Event(object sender, MainLobby.LobbyEventArgs e) {
         UpdateLobby();
@@ -36,28 +44,22 @@ public class LobbyUI : MonoBehaviour
 
      private void UpdateLobby(Lobby lobby) {
 
+        foreach (Transform child in tableObject) {
+            if (child == rowHeader || child == playerRowObject) continue;
 
-        // ClearLobby();
+            Destroy(child.gameObject);
+        }
 
-        // foreach (Player player in lobby.Players) {
-        //     Transform playerSingleTransform = Instantiate(playerSingleTemplate, container);
-        //     playerSingleTransform.gameObject.SetActive(true);
-        //     LobbyPlayerSingleUI lobbyPlayerSingleUI = playerSingleTransform.GetComponent<LobbyPlayerSingleUI>();
-
-        //     lobbyPlayerSingleUI.SetKickPlayerButtonVisible(
-        //         LobbyManager.Instance.IsLobbyHost() &&
-        //         player.Id != AuthenticationService.Instance.PlayerId // Don't allow kick self
-        //     );
-
-        //     lobbyPlayerSingleUI.UpdatePlayer(player);
-        // }
-
-        // changeGameModeButton.gameObject.SetActive(LobbyManager.Instance.IsLobbyHost());
+        foreach (Player player in lobby.Players) {
+            
+            Transform playerSingleTransform = Instantiate(playerRowObject, tableObject);
+            playerSingleTransform.gameObject.SetActive(true);
+            LobbyPlayerRow lobbyPlayerRow = playerSingleTransform.GetComponent<LobbyPlayerRow>();
+            lobbyPlayerRow.UpdatePlayer(player);
+        }
 
         lobbyNameText.text = lobby.Name;
         playersText.text = lobby.Players.Count + "/" + lobby.MaxPlayers;
         isPrivatePublicText.text = lobby.IsPrivate ? "Private" : "Public";
-
-        // Show();
     }
 }
